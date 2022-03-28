@@ -5,8 +5,9 @@
         public readonly string[] orientationConstraints = new string[4] { "N", "W", "S", "E" };
         protected IPlateau Plateau { get; set; }
 
-        public RoverPositioning(int x, int y, string orientation)
+        public RoverPositioning(IPlateau plateau, int x, int y, string orientation)
         {
+            Plateau = plateau;
             XCoordinate = x;
             YCoordinate = y;
             Orientation = orientation;
@@ -16,14 +17,14 @@
         public string Orientation { get; set; }
 
 
-        public void Move(List<PositioningSeriesType> seriesOfMoves)
+        public void Move(char[] seriesOfMoves)
         {
             int currentOrientation = Array.IndexOf(orientationConstraints, Orientation);
             foreach (var move in seriesOfMoves)
             {
-                switch (move)
+                switch (move.ToString().ToUpper())
                 {
-                    case PositioningSeriesType.M:
+                    case "M":
                         switch (Orientation)
                         {
                             case "N":
@@ -42,27 +43,37 @@
                                 break;
                         }
                         break;
-                    case PositioningSeriesType.L:
+                    case "L":
                         if (currentOrientation == 0)
                         {
-                            currentOrientation = 4;
+                            currentOrientation = orientationConstraints.Length - 1;
                         }
-                        currentOrientation--;
+                        else
+                        {
+                            currentOrientation--;
+                        }
                         break;
-                    case PositioningSeriesType.R:
-                        if (currentOrientation == orientationConstraints.Length)
+                    case "R":
+                        if (currentOrientation == orientationConstraints.Length - 1)
                         {
                             currentOrientation = 0;
                         }
-                        currentOrientation++;
+                        else
+                        {
+                            currentOrientation++;
+                        }
                         break;
 
                 }
+
+                Orientation = orientationConstraints[currentOrientation];
             }
+
+            Console.WriteLine($"{XCoordinate} {YCoordinate} {Orientation}");
 
             if (!Plateau.IsCoordinatesWithinPlateauPlane(XCoordinate, YCoordinate))
             {
-                throw new FallOffPlateauException("Error! The plateau doesn't reach that far!");
+                throw new FallOffPlateauException("Error! The plateau doesn't reach that far! You fell off. :-(");
             }
         }
     }

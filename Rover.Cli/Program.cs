@@ -19,14 +19,18 @@ namespace Rover.Cli
             var y = Console.ReadLine();
             EntryValidation(y, "y", out var entryY);
 
-            CreateHostBuilder(args, entryX, entryY).Build().Run();
+            //setup our DI
+            var serviceProvider = new ServiceCollection()
+                .AddSingleton<IPlateau>(new MarsPlateau(entryX, entryY))
+                .BuildServiceProvider();
+            var plateau = serviceProvider.GetRequiredService<IPlateau>();
 
-
-
+            RoverPositioning positioning = new RoverPositioning(plateau, entryX, entryY, "N");
             bool oneMoreRover = false;
+            char[] series = { };
             do
             {
-                Console.WriteLine("Enter a Mars Rover current positioning (Xcoord Ycoord and Orientation) separated by a space: \n\r");
+                Console.WriteLine("Enter a Mars Rover current positioning (Xcoord, Ycoord and Orientation) separated by a space(i.e. 3 5 E): \n\r");
                 string currentPositioning = Console.ReadLine();
 
                 string[] entered = currentPositioning.Split(" ");
@@ -35,7 +39,8 @@ namespace Rover.Cli
                 {
                     try
                     {
-                        var positioning = new RoverPositioning(int.Parse(entered[0]), int.Parse(entered[1]), entered[2]);
+                        loop = false;
+                        positioning = new RoverPositioning(plateau, int.Parse(entered[0]), int.Parse(entered[1]), entered[2]);
                         if (!positioning.orientationConstraints.Contains(entered[2]))
                         {
                             throw new Exception();
@@ -45,19 +50,23 @@ namespace Rover.Cli
                     {
                         loop = true;
                         Console.WriteLine("Something went wrong. Please re-enter Mars Rover position.\n\r");
+                        currentPositioning = Console.ReadLine();
+                        entered = currentPositioning.Split(" ");
                     }
 
                 } while (loop);
 
-                Console.WriteLine("Enter a series of moves for this rover not separated (i.e. LLMMLMRM):\n\r ");
+                Console.WriteLine("Enter a series of moves for this rover NOT SEPARATED by spaces (i.e. LLMMLMRM):\n\r ");
                 var seriesEntry = Console.ReadLine();
                 if (seriesEntry != null)
+                {
                     if (Regex.IsMatch(seriesEntry, "[lmrLMR]"))
                     {
-                        seriesEntry.ToArray().ToList();
+                        series = seriesEntry.ToCharArray();
                     }
+                }
 
-
+                positioning.Move(series);
 
                 Console.WriteLine("Enter another rover position and series of moves? Y or N?");
                 var answer = Console.ReadLine();
@@ -65,14 +74,15 @@ namespace Rover.Cli
                 {
                     oneMoreRover = true;
                 }
+                else
+                {
+                    oneMoreRover = false;
+                }
 
             } while (oneMoreRover);
 
-
-            Console.WriteLine("Enter a series of moves (L, R, M) separated by a space: \n\r");
-            string series = Console.ReadLine();
-
-
+            Console.WriteLine("Press any key to continue...");
+            _ = Console.Read();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args, int x, int y) =>

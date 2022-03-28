@@ -1,6 +1,6 @@
 ﻿namespace Rover.Cli
 {
-    public class MarsPlateau
+    public class MarsPlateau : IPlateau
     {
         public MarsPlateau(int xCoordinate, int yCoordinate)
         {
@@ -17,7 +17,7 @@
                 { "y", 0 }
             };
 
-        public Dictionary<string, int> UpperRightCoordinates { get; set; }
+        public Dictionary<string, int> UpperRightCoordinates { get; }
 
         public bool IsCoordinatesWithinPlateauPlane(int x = 0, int y = 0)
         {
